@@ -1,76 +1,87 @@
-#XG
+#BG
+from BGboost import BGBRegressor
 
 
-mseXG = []
-rmseXG= []
-maeXG= []
+mseBG = []
+rmseBG= []
+maeBG= []
 
-p_XGbooster = []
+p_BGbooster = []
+p_BGestimators = []
 
-param_grid = {'booster': ['gblinear', 'gbtree']}
 
-melhor_validacao_XG = 1000
-best_paramsXG = {}
+param_grid = {'booster': ['gblinear', 'gbtree'], 'n_estimators':[100,200,500,1000]}
+
+melhor_validacao_BG = 1000
+best_paramsBG = {}
 
 
 
 for i in range(20):
     print(i+1)
     for booster in param_grid['booster']:
-        XG = XGBRegressor(booster=booster)
-        XG.fit(x_treino, y_treino)
-        opiniao = XG.predict(x_teste)
-        mse_validacao_XG = mean_squared_error(y_teste, opiniao)
-        
-        if (mse_validacao_XG < melhor_validacao_XG):
-            melhor_validacao_XG = mse_validacao_XG
-            best_paramsXG = {
-                'booster': booster
-            }
+        for estimators in param_grid['n_estimators']:
+            BG = BGBRegressor(booster=booster, n_estimators=estimators)
+            BG.fit(x_treino, y_treino)
+            opiniao = BG.predict(x_teste)
+            mse_validacao_BG = mean_squared_error(y_teste, opiniao)
+            
+            if (mse_validacao_BG < melhor_validacao_BG):
+                melhor_validacao_BG = mse_validacao_BG
+                best_paramsBG = {
+                    'booster': booster,
+                    'n_estimators':estimators
+                }
 
 
-    print(melhor_validacao_XG)
-    print(mse_validacao_XG)
-    print(best_paramsXG)
+    print(melhor_validacao_BG)
+    print(mse_validacao_BG)
+    print(best_paramsBG)
 
-    XG = XGBRegressor(booster=best_paramsXG['booster'])
+
+    BG = BGBRegressor(booster=best_paramsBG['booster'], n_estimators=best_paramsBG['n_estimators'])
     
-    XG.fit(x_treino, y_treino)
-    opiniao_XG = XG.predict(x_teste)
+    BG.fit(x_treino, y_treino)
+    opiniao_BG = BG.predict(x_teste)
 
-    mae = mean_absolute_error(y_teste, opiniao_XG).round(2)
-    mse = mean_squared_error(y_teste, opiniao_XG).round(2)
+    mae = mean_absolute_error(y_teste, opiniao_BG).round(2)
+    mse = mean_squared_error(y_teste, opiniao_BG).round(2)
     rmse = np.sqrt(mse).round(2)
 
-    maeXG.append(mae)
-    mseXG.append(mse)
-    rmseXG.append(rmse)
+    maeBG.append(mae)
+    mseBG.append(mse)
+    rmseBG.append(rmse)
 
-    p_XGbooster.append(best_paramsXG['booster'])
-
+    p_BGbooster.append(best_paramsBG['booster'])
+    p_BGestimators.append(best_paramsBG['n_estimators'])
 
 # RESULTADOS !!!!
-maxp_XGbooster = max(set(p_XGbooster), key=p_XGbooster.count)
+maxp_BGbooster = max(set(p_BGbooster), key=p_BGbooster.count)
+maxp_BGestimators = max(set(p_BGestimators), key=p_BGestimators.count)
 
 
-media_maeXG = np.mean(maeXG)
-media_mseXG = np.mean(mseXG)
-media_rmseXG = np.mean(rmseXG)
 
-p_XGbooster.append(maxp_XGbooster)
+media_maeBG = np.mean(maeBG)
+media_mseBG = np.mean(mseBG)
+media_rmseBG = np.mean(rmseBG)
 
-maeXG.append(media_maeXG)
-mseXG.append(media_mseXG)
-rmseXG.append(media_rmseXG)
+p_BGbooster.append(maxp_BGbooster)
+p_BGestimators.append(maxp_BGestimators)
 
-dfXG = pd.DataFrame({
-    'booster':p_XGbooster,
-    'MAE': maeXG,
-    'MSE': mseXG,
-    'RMSE': rmseXG
+
+maeBG.append(media_maeBG)
+mseBG.append(media_mseBG)
+rmseBG.append(media_rmseBG)
+
+dfBG = pd.DataFrame({
+    'booster':p_BGbooster,
+    'estimators':p_BGestimators,
+    'MAE': maeBG,
+    'MSE': mseBG,
+    'RMSE': rmseBG
 })
 
 print("O ÚLTIMO VALOR (20) É A MÉDIA !!!")
 
-display(dfXG)
-dfXG.to_csv('resultadosModelos/dfXG.csv', sep = ';', index = False, encoding='UTF-8')
+display(dfBG)
+dfBG.to_csv('resultadosModelos/dfBG.csv', sep = ';', index = False, encoding='UTF-8')
